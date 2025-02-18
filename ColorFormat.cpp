@@ -114,6 +114,28 @@ ColorFormat::~ColorFormat(void) {}
 /* ############################################################################################## */
 
 /**
+ * @brief Removes all ANSI formatting codes from the given string.
+ * 
+ * This function detects and removes ANSI escape sequences (e.g., colors, styles)
+ * from the provided text, ensuring a clean, unformatted string.
+ * 
+ * @param string The string to clean from previous formatting.
+ */
+void ColorFormat::removePreviousFormats(std::string &string) {
+	size_t start = 0;
+
+	while ((start = string.find("\033[")) != std::string::npos) {
+		size_t end = string.find('m', start);
+		if (end != std::string::npos)
+			string.erase(start, end - start + 1);
+		else
+			break;
+	}
+}
+
+/* ############################################################################################## */
+
+/**
  * @brief Retrieves the formatted string.
  * 
  * This function returns the string that has been formatted with the selected
@@ -141,7 +163,7 @@ const std::string ColorFormat::getFormattedString(void) const { return _formatte
  * 
  * @throws std::invalid_argument If multiple colors or unknown formats are detected.
  */
-const std::string ColorFormat::formatString(const std::string &string,
+const std::string ColorFormat::formatString(std::string string,
 											const std::string &firstFormat,
 											const std::string &secondFormat,
 											const std::string &thirdFormat,
@@ -183,7 +205,11 @@ const std::string ColorFormat::formatString(const std::string &string,
 				throw std::invalid_argument("❌ Unknown format detected: " + parameters[i]);
 		}
 	}
-	return color + formats + std::regex_replace(string, std::regex("\033\\[[0-9;]*m"), "") + "\033[0m";
+
+	if (!color.empty() or !formats.empty())
+		removePreviousFormats(string);
+
+	return color + formats + string + "\033[0m";
 }
 
 /**
@@ -325,16 +351,16 @@ const std::string ColorFormat::rainbow(const std::string &firstArgument,
 	if (string.empty())
 		return "🌈";
 	
-	std::string colors[8] = {"\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m", "\033[37m", "\033[30m"};
+	std::string colors[6] = {"\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m"};
 	std::string randomColors[8];
-	for (size_t i = 0 ; i < 8 ; i++) {
-		size_t randomIndex = std::rand() % (8 - i % 8);
+	for (size_t i = 0 ; i < 6 ; i++) {
+		size_t randomIndex = std::rand() % (6 - i % 6);
 		randomColors[i] = colors[randomIndex];
-		colors[randomIndex] = colors[7 - i];
+		colors[randomIndex] = colors[5 - i];
 	}
 
 	std::string rainbowString = "";
-	string = std::regex_replace(string, std::regex("\033\\[[0-9;]*m"), "");
+	removePreviousFormats(string);
 	for (size_t i = 0 ; i < string.size() ; i++) {
 		if (string[i] == '\033' && i + 1 < string.size() && string[i + 1] == '[') {
 			while (i < string.size() && string[i] != 'm') {
@@ -343,7 +369,7 @@ const std::string ColorFormat::rainbow(const std::string &firstArgument,
 			rainbowString += 'm';
 			continue;
 		}
-		rainbowString += randomColors[i % 8] + string[i];
+		rainbowString += randomColors[i % 6] + string[i];
 	}
 
 	return format + rainbowString + "\033[0m";

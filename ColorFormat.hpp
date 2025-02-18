@@ -38,8 +38,9 @@
 
 /* ############################################################################################## */
 
+#include <cstdlib>
 #include <iostream>
-#include <regex>
+#include <sstream>
 
 /* ############################################################################################## */
 
@@ -57,6 +58,16 @@ class ColorFormat {
 
 		/** ANSI escape codes for styles */
 		static const std::string _styles[5][2];
+
+		/**
+		 * @brief Removes all ANSI escape sequences from a string.
+		 * 
+		 * This function ensures that no previous formatting (e.g., colors, styles)
+		 * interferes with new formatting applied.
+		 * 
+		 * @param string The string to clean.
+		 */
+		static void removePreviousFormats(std::string &string);
 	public:
 		/**
 		 * @brief Constructs a formatted text with the given styles and colors.
@@ -95,7 +106,7 @@ class ColorFormat {
 		 * @return The formatted string with applied styles and colors.
 		 * @throws std::invalid_argument if multiple colors are used or an invalid style is detected.
 		 */
-		static const std::string formatString(const std::string &string		  = "",
+		static const std::string formatString(std::string 		string		  = "",
 											  const std::string &firstFormat  = "",
 											  const std::string &secondFormat = "",
 											  const std::string &thirdFormat  = "",
